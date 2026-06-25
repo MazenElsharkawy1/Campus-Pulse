@@ -11,11 +11,11 @@ class Newsletter(Base):
     articles_count = Column(Integer, default=0)
     edition = Column(Integer, nullable=True)
     published_date = Column(DateTime(timezone=True), server_default=func.now())
-
-    # التعديل هنا: هنستخدم اسم واحد ونوحد الـ back_populates
+    last_update = Column(DateTime(timezone=True), nullable=True) 
     newsletter_articles = relationship(
         "NewsletterArticle", 
         back_populates="newsletter", 
         overlaps="articles",
-        cascade="all, delete-orphan" # إضافة اختيارية لتمسح المقالات المرتبطة لو النشرة اتمسحت
+        cascade="all, delete-orphan" 
     )
+    users = relationship("User", back_populates="newsletters")

@@ -1,0 +1,58 @@
+{
+  "last_updated": "2026-06-22T10:26:23.644910+00:00",
+  "current_edition": 1,
+  "total_users": 6,
+  "users": [
+    {
+      "user_id": 13,
+      "email": "mohamedhesham@mti.edu.eg",
+      "full_name": "Mohamed hesham",
+      "role": "student",
+      "profile_picture_url": "/static/profiles/user_13_20260416_032307.png",
+      "profile_picture_id": "img_13_20260416_032307_e4a8831d",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-04-16T01:23:07.533018+00:00",
+      "newsletter_edition": 1
+    },
+    {
+      "email": "mazen.10077@cs.mti.edu.eg",
+      "profile_picture_url": "/static/profiles/user_mazen.10077@cs.mti.edu.eg_20260506_002533.jpeg",
+      "profile_picture_id": "img_mazen.10077@cs.mti.edu.eg_20260506_002533_847fcb28",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-05-05T21:25:33.061863+00:00",
+      "newsletter_edition": 1
+    },
+    {
+      "email": "lily.100911@cs.mti.edu.eg",
+      "profile_picture_url": "/static/profiles/user_lily.100911@cs.mti.edu.eg_20260614_161157.png",
+      "profile_picture_id": "img_lily.100911@cs.mti.edu.eg_20260614_161157_0181d605",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-06-14T13:11:57.519403+00:00",
+      "newsletter_edition": 1
+    },
+    {
+      "email": "karem.100117@cs.mti.edu.eg",
+      "profile_picture_url": "/static/profiles/user_karem.100117@cs.mti.edu.eg_20260620_141113.jpeg",
+      "profile_picture_id": "img_karem.100117@cs.mti.edu.eg_20260620_141113_21fe2377",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-06-20T11:11:13.580624+00:00",
+      "newsletter_edition": 1
+    },
+    {
+      "email": "kareem.101788@cs.mti.edu.eg",
+      "profile_picture_url": "/static/profiles/user_kareem.101788@cs.mti.edu.eg_20260621_120845.png",
+      "profile_picture_id": "img_kareem.101788@cs.mti.edu.eg_20260621_120845_59256a2d",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-06-21T09:08:45.805894+00:00",
+      "newsletter_edition": 1
+    },
+    {
+      "email": "mazen.100777@cs.mti.edu.eg",
+      "profile_picture_url": "/static/profiles/user_mazen.100777@cs.mti.edu.eg_20260622_132623.png",
+      "profile_picture_id": "img_mazen.100777@cs.mti.edu.eg_20260622_132623_0fd4f7e5",
+      "has_custom_picture": true,
+      "uploaded_at": "2026-06-22T10:26:23.644881+00:00",
+      "newsletter_edition": 1
+    }
+  ]
+}

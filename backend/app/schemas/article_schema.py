@@ -1,46 +1,38 @@
+# backend/app/schemas/article_schema.py
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
-
-
-# --- 1. البيانات الكاملة للخبر (دمج JSON + DB) ---
 class ArticlesDashboardResponse(BaseModel):
     article_id: int
-    title: str          # من الـ JSON
-    summary: str        # من الـ JSON
+    title: str          
+    summary: str        
     category_id: int
     status: str
-    # scrapped_at: datetime
-    # تاريخ النشر هيظهر هنا لو الخبر حالته published
     published_at: Optional[datetime] = None 
     
     model_config = ConfigDict(from_attributes=True)
 
-# --- 2. طلب النشر (Publish Request) ---
 class ArticlesPublishRequest(BaseModel):
     article_id: int
-    adviser_id: int
-    final_summary: str  # التلخيص الذي تم اعتماده للنشر فوراً
+    email: str  
+    final_summary: Optional[str] = None 
 
-# --- 3. العرض للجمهور حسب الكاتيجوري ---
 class ArticlesPublicView(BaseModel):
     article_id: int
     title: str
     summary: str
     photo: Optional[str] = None
     category_id: int
-    published_at: datetime  # لازم يكون موجود للأخبار المنشورة
+    published_at: datetime 
     newsletter_id: Optional[int] = None
     
     model_config = ConfigDict(from_attributes=True)
 
-# --- 4. رد بسيط للتأكيد ---
 class ArticlesActionResponse(BaseModel):
     message: str
     article_id: int
     status: str
-
 
 class ArticleBase(BaseModel):
     title: str
@@ -48,18 +40,25 @@ class ArticleBase(BaseModel):
     status: str = "published"
 
 class ArticleCreate(ArticleBase):
-    # البيانات اللي بنحتاجها وقت ما المحرر ينشر الخبر
     content_summary: str
-    embedding: List[float] # الفيكتور اللي الموديل بيطلعه
+    embedding: List[float] 
 
 class ArticleResponse(ArticleBase):
     article_id: int
     published_at: Optional[datetime] = None
-    embedding: Optional[List[float]] = None # الفيكتور المخزن في الداتابيز
-
+    embedding: Optional[List[float]] = None 
     model_config = ConfigDict(from_attributes=True)
 
-# سكيما مخصصة للـ Dashboard (اللي بترجع للطالب)
+class ArticleResponse2(ArticleBase):
+    article_id: int
+    published_at: Optional[datetime] = None
+    summary: Optional[str] = None
+    category:  Optional[str] = None
+    category_id: Optional[int] = None
+    photo: Optional[str] = None
+    original_media_url: Optional[str] = None 
+    model_config = ConfigDict(from_attributes=True)
+
 class DashboardArticle(BaseModel):
     article_id: int
     title: str
@@ -69,3 +68,12 @@ class DashboardArticle(BaseModel):
     rank_score: float = Field(..., description="درجة الملاءمة للطالب")
 
     model_config = ConfigDict(from_attributes=True)
+
+class ArticlesPinned(BaseModel):
+    article_id: int
+    title: str
+    summary: str
+    image: Optional[str] = None
+    category: Optional[int] = None  # 🔁 غيرنا من str إلى int
+    published_at: datetime
+    model_config = ConfigDict(from_attributes=True)    

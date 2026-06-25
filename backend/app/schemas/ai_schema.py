@@ -12,4 +12,4 @@ class ArticleOutput(BaseModel):
     summary: str
     category: str
     confidence: float
-    text_vector: List[float]  # تمثيل SBERT
+    text_vector: List[float] 

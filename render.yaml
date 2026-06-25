@@ -1,0 +1,13 @@
+# render.yaml
+services:
+  - type: web
+    name: campus-pulse-backend
+    runtime: python
+    envVars:
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDER_EMAIL
+        value: your-email@domain.com
+      # أضف أي متغيرات بيئة أخرى هنا (مثل DATABASE_URL إذا استخدمت PostgreSQL)
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"

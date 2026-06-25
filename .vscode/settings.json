@@ -1,0 +1,8 @@
+{
+    "git.ignoreLimitWarning": true,
+    "python.analysis.extraPaths": [
+        "./backend/app/db",
+        "./backend/app/db"
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:venv"
+}

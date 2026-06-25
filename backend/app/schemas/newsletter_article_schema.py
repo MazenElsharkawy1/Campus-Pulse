@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+# schemas/newsletter_article_schema.py
+from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional, Literal
 
 class NewsletterArticleBase(BaseModel):
     newsletter_id: int
@@ -11,24 +12,37 @@ class NewsletterArticleBase(BaseModel):
 class NewsletterArticleResponse(NewsletterArticleBase):
     model_config = ConfigDict(from_attributes=True)
 
-# السكيما المجمعة اللي هتروح للفرونت إند
 class ArticleInNewsletter(BaseModel):
     article_id: int
     title: str
-    summary: str
+    summary: Optional[str] = None
+    category: Optional[str] = None
+    content: Optional[str] = None
     image_url: Optional[str] = None  
     category_id: int
-    is_opened: bool
+    # open_counter: int = 0
+    # share_counter: int = 0
     position: int 
     published_at: str 
-    
-    # التعديل المهم هنا: بنسمح للـ Pydantic يقرأ من الـ Dictionaries اللي بنبعتها
+    source: str = ""
     model_config = ConfigDict(from_attributes=True) 
 
-# سكيما الرد النهائي اللي بتجمع كل حاجة (الـ Dashboard)
+
 class NewsletterDashboardResponse(BaseModel):
     student_name: str
+    student_profile_picture: Optional[str] =None
     edition: int
     newsletter_date: str
     newsletter_id: int
     articles: list[ArticleInNewsletter]
+
+
+class UserOpeningUpdate(BaseModel):
+    email: EmailStr
+    newsletter_id: int
+    article_id: int
+
+class UserSharingUpdate(BaseModel):
+    email: EmailStr
+    newsletter_id: int
+    article_id: int

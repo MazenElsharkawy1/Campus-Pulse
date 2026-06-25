@@ -1,29 +1,35 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
 from app.db.database import get_db
-from app.models.feedback import Feedback   
-from app.schemas.feedback import FeedbackResponse, FeedbackCreate
-router = APIRouter(prefix="/api/feedback", tags=["Feedback"])
+from app.models.users import User
+from app.models.feedback import Feedback
+from app.schemas.feedback import FeedbackCreate
 
-@router.post("/", response_model=FeedbackResponse)
+router = APIRouter( tags=["feedback"])
+
+@router.post("/feedback")
+
 def create_feedback(
     feedback: FeedbackCreate,
     db: Session = Depends(get_db)
 ):
-    # إنشاء سجل جديد
+    user = db.query(User).filter(User.email == feedback.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found with this email")
+    user_id = user.user_id
     db_feedback = Feedback(
         comment=feedback.comment,
-        reaction=feedback.reaction,  # غيرناه من rating لـ reaction في المودل
+        reaction=feedback.reaction, 
         newsletter_id=feedback.newsletter_id,
-        user_id=feedback.user_id,
+        user_id=user_id, 
         created_at=datetime.utcnow()
     )
-
     db.add(db_feedback)
     db.commit()
     db.refresh(db_feedback)
-
-    return db_feedback.to_dict()  # بيستخدم الدالة اللي موجودة عندك
+    return {
+        "status": "success",
+        "message": "Feedback submitted successfully",
+        "feedback_id": db_feedback.feedback_id
+    }

@@ -1,0 +1,45 @@
+{
+  "submissions": [
+    {
+      "submission_id": 1,
+      "stakeholder_email": "private.uni25@gmail.com",
+      "title": "اجازة رسمية بمناسبة عيد العمال",
+      "content": "تعلن ادارة الجامعة عن منح اجازة رسمية يوم الخميس الموافق 7 مايو و ذلك بمناسبة الاحتفال بعيد العمال",
+      "image_url": "",
+      "attachment_url": "",
+      "status": "published",
+      "submitted_at": "2026-05-03T22:10:59.763412+00:00",
+      "reviewed_by_email": "advisor@campus.edu",
+      "reviewed_at": "2026-05-03T23:01:49.222449+00:00",
+      "rejection_reason": null,
+      "edited_by_email": null,
+      "edited_at": null,
+      "edit_reason": null,
+      "original_title": "اجازة رسمية بمناسبة عيد العمال",
+      "original_content": "تعلن ادارة الجامعة عن منح اجازة رسمية يوم الخميس الموافق 7 مايو و ذلك بمناسبة الاحتفال بعيد العمال",
+      "published_at": null,
+      "version": 1
+    },
+    {
+      "submission_id": 2,
+      "stakeholder_email": "info@mti.edu.eg",
+      "title": "test instruction",
+      "content": "new instruction",
+      "image_url": "",
+      "attachment_url": "",
+      "status": "pending",
+      "submitted_at": "2026-06-22T09:03:28.831476+00:00",
+      "reviewed_by_email": null,
+      "reviewed_at": null,
+      "rejection_reason": null,
+      "edited_by_email": null,
+      "edited_at": null,
+      "edit_reason": null,
+      "original_title": "test instruction",
+      "original_content": "new instruction",
+      "published_at": null,
+      "version": 1
+    }
+  ],
+  "next_id": 3
+}

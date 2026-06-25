@@ -1,148 +1,110 @@
-from fastapi import APIRouter, Form, HTTPException, Depends
+from fastapi import APIRouter, Form, HTTPException, Depends, logger
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.services.user_service import authenticate_user, register_user, get_user_role
+from app.services.user_service import _validate_mti_email, authenticate_user
 from app.models.users import User
+from app.models.stakeholder import Stakeholder
 import traceback
+from app.models.roles import Role
+from app.services.auth_service import login_tracker  
 
-router = APIRouter()
+router = APIRouter( tags=["users login"])
 
 @router.post("/login")
-def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    """معالجة تسجيل الدخول من قاعدة البيانات - استجابة JSON"""
+async def login(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    email = email.lower().strip()  
     try:
+        if not _validate_mti_email(email):
+            raise HTTPException(status_code=400, detail="Invalid email format. Only MTI emails are allowed." )
+        is_blocked, remaining = login_tracker.is_blocked(email)
+        if is_blocked:
+            print(f"🚫 Blocked login attempt: {email}")
+            raise HTTPException(status_code=403,
+                detail=f"Account temporarily blocked due to multiple failed login attempts. Try again in {remaining} minutes")
         user = db.query(User).filter(User.email == email).first()
-        
-        if not user:
-            raise HTTPException(status_code=401, detail="الإيميل غير موجود في النظام")
-        
-        auth_result = authenticate_user(db, email, password)
-        if not auth_result:
-            raise HTTPException(status_code=401, detail="كلمة المرور غير صحيحة")
-        
-        if user.password == "changeme" and password == "changeme":
+        stakeholder = db.query(Stakeholder).filter(Stakeholder.official_email == email).first()
+        if not user and not stakeholder:
+            login_tracker.record_failed(email)
+            raise HTTPException(status_code=401,detail="Invalid email or password")
+        auth_success = False
+        role_name = None
+        if user:
+            role = db.query(Role).filter(Role.role_id == user.role_id).first()
+            if not role:
+                raise HTTPException(status_code=401, detail="Role not found for the user")
+            role_name = role.name
+            if not authenticate_user(db, email, password):
+                is_blocked, remaining, failed_count = login_tracker.record_failed(email)
+                if is_blocked:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Account blocked after {failed_count} failed attempts. Try again in {remaining} minutes"
+                    )
+                else:
+                    remaining_attempts = 3 - failed_count
+                    raise HTTPException(
+                        status_code=401,
+                        detail=f"Incorrect password. You have {remaining_attempts} more attempt(s) before temporary block."
+                    )
+            
+            auth_success = True
+            
+        elif stakeholder:
+            if stakeholder.password != password: 
+                is_blocked, remaining, failed_count = login_tracker.record_failed(email)
+                if is_blocked:
+                    raise HTTPException(status_code=403,
+                        detail=f"Account blocked after {failed_count} failed attempts. Try again in {remaining} minutes")
+                else:
+                    remaining_attempts = 3 - failed_count
+                    raise HTTPException( status_code=401,
+                        detail=f"Incorrect password. You have {remaining_attempts} more attempt(s) before temporary block.")
+            role_name = "stakeholder"
+            auth_success = True
+
+        if auth_success:
+            login_tracker.reset(email)
+            print(f"✅ Successful login: {email} as {role_name}")
             return JSONResponse(
                 status_code=200,
                 content={
-                    "status": "first_login",
-                    "message": "يرجى تحديث كلمة المرور الخاصة بك",
-                    "email": email
+                    "status": "success",
+                    "message": "Logged in successfully",
+                    "user": {
+                        "email": email,
+                        "role": role_name,
+                        "user_id": user.user_id if user else stakeholder.stakeholder_id,
+                        "full_name": user.full_name if user else stakeholder.name
+                    }
                 }
             )
         
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "success",
-                "message": "تم تسجيل الدخول بنجاح",
-                "email": email
-            }
-        )
-    
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ خطأ: {str(e)}")
+        print(f"❌ Login error: {str(e)}")
+        import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="خطأ داخلي في الخادم")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/admin/blocked_accounts")
+async def get_blocked_accounts():
+    blocked = login_tracker.get_all_blocked()
+    return {"status": "success", "count": len(blocked), "accounts": blocked}
 
 
-@router.get("/user")
-def user(email: str, db: Session = Depends(get_db)):
-    """عرض بيانات صفحة التسجيل كـ JSON"""
-    try:
-        user = db.query(User).filter(User.email == email).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
-        
-        role_id = user.role_id
-        is_student = (role_id == 3)
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "email": email,
-                "role_id": role_id,
-                "is_student": is_student
-            }
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات المستخدم")
+@router.post("/admin/unblock/{email}")
+async def unblock_account(email: str):
+    login_tracker.reset(email.lower())
+    return {"status": "success", "message": f"تم فك الحظر عن: {email}"}
 
-
-@router.post("/register")
-def register(
-    email: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...),
-    category_names: list = Form([]),
-    phone: str = Form(None),
-    full_name: str = Form(None),
-    db: Session = Depends(get_db)
-):
-    print(f"📩 تم استلام: email={email}, password_len={len(password)}")
-    print(f"   categories: {category_names}")
-    print(f"   full_name: {full_name}, phone: {phone}")
-    
-    try:
-        if password != confirm_password:
-            raise HTTPException(status_code=400, detail="كلمات المرور غير متطابقة")
-        
-        # تنظيف البيانات
-        phone = phone.strip() if phone else None
-        full_name = full_name.strip() if full_name else email.split("@")[0].replace(".", " ").title()
-        selected_category = category_names  # اختر أول فئة
-        # في دالة register
-        raw_categories = category_names  # قد تكون ['culture,sport'] أو ['culture', 'sport']
-
-        # تحويل إلى قائمة صحيحة
-        cleaned_categories = []
-        for item in raw_categories:
-            if "," in item:
-                # تقسيم النص إذا كان يحتوي فواصل
-                cleaned_categories.extend([x.strip() for x in item.split(",") if x.strip()])
-            else:
-                cleaned_categories.append(item.strip())
-
-        # إزالة التكرارات والقيم الفارغة
-        selected_category_names = list(set(cleaned_categories))
-        # استدعاء الدالة المحدثة
-        success = register_user(
-            db=db,
-            email=email,
-            password=password,
-            full_name=full_name,
-            phone=phone,
-            selected_category_name=selected_category_names
-        )
-        
-        if not success:
-            raise HTTPException(status_code=404, detail="فشل تحديث الحساب - المستخدم غير موجود")
-        
-        role_id = get_user_role(db, email)
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "success",
-                "message": "تم إنشاء الحساب وتحديث البيانات بنجاح",
-                "email": email,
-                "role_id": role_id,
-                "full_name": full_name,
-                "phone": phone,
-                "selected_category": selected_category_names,
-                "is_student": (role_id == 3)
-            }
-        )
-    
-    except HTTPException:
-        raise
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        print(f"❌ خطأ في التسجيل: {str(e)}")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="خطأ داخلي في الخادم")
+@router.post("/admin/block/{email}")
+async def block_account(email: str):
+    """حظر حساب يدوياً"""
+    login_tracker.block(email.lower())
+    return {"status": "success", "message": f"تم حظر: {email}"}
